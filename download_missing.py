@@ -5,11 +5,78 @@ from glob import glob
 import ntpath
 import ftplib
 from ftplib import FTP
-
+from os import environ
 #from sortedcontainers import SortedList
 
 
 def main(args): 
+    ftp = ftplib.FTP('ftp.ncbi.nlm.nih.gov')  
+    ftp.login()
+    print("connected to remote server : ftp.ncbi.nlm.nih.gov")
+    print()
+    def parse_cmdline_params(arg_list):
+        """Parses commandline arguments.
+        :param arg_list: Arguments to parse. Default is argv when called from the
+        command-line.
+        :type arg_list: list.
+        """
+        #Create instance of ArgumentParser
+        options_parser = ArgumentParser(formatter_class=
+                                        ArgumentDefaultsHelpFormatter)
+        options_parser.add_argument('--species', dest='species', type=str, required=True,
+                                    help="Metadata of Species, eg: Salmonella, Listera", default=environ.get("BAR1"))
+        options_parser.add_argument('--folders', dest='folders', type=str, required=True,
+                                    help="Genome assembly fasta folders (if multiple separate with comma).", default=environ.get("BAR2"))
+        opts = options_parser.parse_args(args=arg_list)
+        return opts
+
+    def get_matadata_ftp(folder=""):
+        contents = ftp.nlst(folder)
+        folders = []
+        for item in contents:
+            if item[-1].isdigit():
+                folders.append(item)
+
+        folders.sort(key=lambda x: int(x.split(".")[1]))   
+
+        return folders[len(folders)-1]
+
+
+
+    def downloadFiles(path):
+        try:
+        #     # change into "path directory"
+            ftp.cwd(path)       
+            output_folder = os.getcwd()
+            print ("Download to current directory: " + output_folder)
+        except ftplib.error_perm:
+            # invalid entry (ensure input form: "/dir/folder/something/")
+            print ("error: could not change to "+path)
+            sys.exit("ending session")
+
+
+        #list children:
+        filelist=ftp.nlst()
+
+        for file in filelist:
+            try:
+                #this will check if file is folder:
+                ftp.cwd(path+file+"/")
+                #if so, explore it:
+                downloadFiles(path+file+"/")
+            except ftplib.error_perm:
+                #not a folder with accessible content
+                #download & return
+                if file.endswith(".tsv"):
+                    #possibly need a permission exception catch:
+                    final_path_file = file
+                    ftp.retrbinary("RETR "+file, open(os.path.join(output_folder,file).replace("\\","/"),"wb").write)
+                    print (file + " downloaded")
+        return final_path_file
+
+
+        # Parse command line parameters.
+
     opts = parse_cmdline_params(args[1:])
     """
     First part : find the metadata.tsv through NCBI ftp
@@ -32,10 +99,7 @@ def main(args):
 
 
 
-    """
-    Second Part: In the cwd, get the tsv file and start running missing_GCA/SRR
-
-    """
+    """ Second Part: In the cwd, get the tsv file and start running missing_GCA/SRR """
     # Get list of SRR numbers from the metadata file.
     SRR_list = []
     # Decided not to use SortedList since we want them in chronological order.
@@ -116,79 +180,17 @@ def main(args):
 
 
 
-"""
-Functions for First Part:
-"""
-def get_matadata_ftp(folder=""):
-    contents = ftp.nlst(folder)
-    folders = []
-    for item in contents:
-        if item[-1].isdigit():
-            folders.append(item)
-
-    folders.sort(key=lambda x: int(x.split(".")[1]))   
-
-    return folders[len(folders)-1]
+        """
+        Functions for First Part:
+        """
 
 
 
-def downloadFiles(path):
-    try:
-    #     # change into "path directory"
-        ftp.cwd(path)       
-        output_folder = os.getcwd()
-        print ("Download to current directory: " + output_folder)
-    except ftplib.error_perm:
-        # invalid entry (ensure input form: "/dir/folder/something/")
-        print ("error: could not change to "+path)
-        sys.exit("ending session")
-
-
-    #list children:
-    filelist=ftp.nlst()
-
-    for file in filelist:
-        try:
-            #this will check if file is folder:
-            ftp.cwd(path+file+"/")
-            #if so, explore it:
-            downloadFiles(path+file+"/")
-        except ftplib.error_perm:
-            #not a folder with accessible content
-            #download & return
-            if file.endswith(".tsv"):
-                #possibly need a permission exception catch:
-                final_path_file = file
-                ftp.retrbinary("RETR "+file, open(os.path.join(output_folder,file).replace("\\","/"),"wb").write)
-                print (file + " downloaded")
-    return final_path_file
-
-
-# Parse command line parameters.
-
-def parse_cmdline_params(arg_list):
-    """Parses commandline arguments.
-    :param arg_list: Arguments to parse. Default is argv when called from the
-    command-line.
-    :type arg_list: list.
-    """
-    #Create instance of ArgumentParser
-    options_parser = ArgumentParser(formatter_class=
-                                    ArgumentDefaultsHelpFormatter)
-    options_parser.add_argument('--species', dest='species', type=str, required=True,
-                                help="Metadata of Species, eg: Salmonella, Listera")
-    options_parser.add_argument('--folders', dest='folders', type=str, required=True,
-                                help="Genome assembly fasta folders (if multiple separate with comma).")
-    opts = options_parser.parse_args(args=arg_list)
-    return opts
 
 
 if __name__ == "__main__":
     #debug_args = [sys.argv[0], '--metadata', 'C:\\ieh_input_data\\NCBI_Pathogen_metadata\\Listeria_PDG000000001.2231.metadata.tsv', '--folders', 'C:\\ieh_input_data\\NCBI_Pathogen_metadata\\test_assembly_folder']
     #main(debug_args)
-    ftp = ftplib.FTP('ftp.ncbi.nlm.nih.gov')  
-    ftp.login()
-    print("connected to remote server : ftp.ncbi.nlm.nih.gov")
-    print()
+
     main(sys.argv)
     
