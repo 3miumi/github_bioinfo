@@ -1,41 +1,22 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
 import os       # for getting files from directory
 import sys      # for accessing command line arguments
 import glob
 
-# Command line arguments
-# assert len(sys.argv)<4, "batchrename takes at most 1 command line argument\n"+\
-#                         "Use: python batchrename.py [folder_name]"
-
-# if len(sys.argv) == 1:
-#     folder_name = "/mnt/data2/FDA/assemblies/lmNew2"    # Looks in 'saves/' folder from 'scripts/' folder
-#     print ("Use: python batchrename.py [folder_name]")
-#     print ("Using default path:/mnt/data2/FDA/assemblies/lmNew2")
-# elif len(sys.argv) == 2:
-#     folder_name = sys.argv[1]   # First command line argument is folder
-
-# translation table (TODO make better)
 
 def main():
-
+    # path = os.getcwd()
+    # os.chdir(path)
+    print (os.getcwd())
     with open('missing_GCAs.txt') as f:
         in_list  = [line.strip() for line in f]
 
     with open('missing_SRRs.txt') as f:
         out_list  = [line.strip() for line in f] 
-    # print(in_list)
-    # print(out_list)
 
-    # make sure slash at end of folder name
-
+    # under current folder
     folder_name = os.getcwd()
 
-
-    # fna_path = os.getcwd()
-        
-    # get every FNA file in folder
+    # check if the current GCA is in the missing_GCA.txt
     def check(str):
         with open('missing_GCAs.txt') as f:
             datafile = f.readlines()
@@ -47,12 +28,14 @@ def main():
         return False  # Because you finished the search without finding
 
     files_list = os.listdir(folder_name)
-
-    for dir in files_list:   
+    print("debug")
+    for dir in files_list: 
+        # a folder named fna_xx-xx-xxxx(date) was created in current folder, and all fna were stored there  
         if dir.startswith('fna'):
             dir = os.path.join(folder_name,dir)
             for f in os.listdir(dir): # iterate over all files in files_list
                 if f.endswith(".fna"): # check if FNA file (optional)
+                    # split name GCA_019488765.1_PDT001103426.1_genomic 
                     tempF = f.split('_')[0] +"_"+ f.split('_')[1]
                     
                     if check(tempF):
@@ -60,8 +43,12 @@ def main():
                         oriPath = os.path.join(dir,f)
                         finalPath = os.path.join(dir,out_list[in_list.index(tempF)]) + ".fna"
                         os.rename(oriPath,finalPath )
+                    else:
+                        print("GCA not found")
 
 
 if __name__ == "__main__":
-     main()
-    
+    print("Starting changing name...")
+    main()
+     
+     
