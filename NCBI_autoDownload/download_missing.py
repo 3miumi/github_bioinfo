@@ -14,6 +14,7 @@ def main(args):
     ftp.login()
     print("connected to remote server : ftp.ncbi.nlm.nih.gov")
     print()
+    
     def parse_cmdline_params(arg_list):
         """Parses commandline arguments.
         :param arg_list: Arguments to parse. Default is argv when called from the
@@ -29,7 +30,11 @@ def main(args):
                                     help="Genome assembly fasta folders (if multiple separate with comma).", default=environ.get("BAR2"))
         opts = options_parser.parse_args(args=arg_list)
         return opts
+    
+    # Parse command line parameters.
+    opts = parse_cmdline_params(args[1:])
 
+    
     def get_matadata_ftp(folder=""):
         contents = ftp.nlst(folder)
         folders = []
@@ -75,9 +80,7 @@ def main(args):
         return final_path_file
 
 
-        # Parse command line parameters.
-
-    opts = parse_cmdline_params(args[1:])
+ 
     """
     First part : find the metadata.tsv through NCBI ftp
     1. find the latest path of metadata.tsv
