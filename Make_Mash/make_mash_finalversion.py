@@ -8,10 +8,10 @@ import shlex
 
 
 
-# """Unzip all gz files in the temp/genbank/bacteria"""
-# unzip_fasta.main()
-# """Change all GCA names to SRR/ERR name: GCA_XXXXXXXX.P0XXXXX.fna -->SRRxxxxxxxx.fna"""
-# batchrename_zm.main()
+"""Unzip all gz files in the temp/genbank/bacteria"""
+unzip_fasta.main()
+"""Change all GCA names to SRR/ERR name: GCA_XXXXXXXX.P0XXXXX.fna -->SRRxxxxxxxx.fna"""
+batchrename_zm.main()
 
 
 
@@ -41,26 +41,29 @@ with open('mashGenerate.sh', 'w') as file:
         if f.endswith("fna"): # check if FNA file (optional)\
             tempF = f.split('.')[0]
         # split name GCA_019488765.1_PDT001103426.1_genomic 
-            writeIn = "mash sketch -o "+tempF+".msh "+f
+            writeIn = "mash sketch -o "+tempF+".msh "+os.path.join(fnafolder_name,f)
             file.write(writeIn)
             file.write('\n')
 
            
-# Start mash sketching and all .msh will be store in fna folder
-os.chdir(fnafolder_name)
+# change mashGenerate.sh location to msh_xx-xx-xxxx
+shutil.move(os.path.join(fnafolder_name,'mashGenerate.sh' ), os.path.join(msh_Absdir, 'mashGenerate.sh'))
+
+# Start mash sketching and all .msh will be store in msh folder
+os.chdir(msh_Absdir)
 print ("start")
-mashPath = os.path.join(fnafolder_name,'mashGenerate.sh' )
+
+mashPath = os.path.join(msh_Absdir,'mashGenerate.sh' )
+# permission = "chmod +x "+ mashPath
+subprocess.call(["chmod","+x", mashPath])
 subprocess.call(mashPath, shell=True)
 print ("end")
 
 
-# move all .msh to the msh folder 
-for f in os.listdir(fnafolder_name): # iterate over all files in files_list
-    if f.endswith("msh"):
-        shutil.move(os.path.join(fnafolder_name,f), os.path.join(msh_Absdir, f))
-
-
-
+# # move all .msh to the msh folder 
+# for f in os.listdir(fnafolder_name): # iterate over all files in files_list
+#     if f.endswith("msh"):
+#         shutil.move(os.path.join(fnafolder_name,f), os.path.join(msh_Absdir, f))
 
 
 
