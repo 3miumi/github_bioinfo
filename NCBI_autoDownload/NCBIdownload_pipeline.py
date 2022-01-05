@@ -3,7 +3,7 @@ import shlex, subprocess
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import sys,os
 import download_missing
-
+from subprocess import CalledProcessError
 # print("Please enter species name:")
 # name1 = str(input())
 # print("Please enter existing folder:")
@@ -35,18 +35,23 @@ def main(args):
 
 
     # Split missing_GCAs.txt into mutiple small txt by 1000 lines
-    lines_per_file = 1000
-    smallfile = None
-    with open('missing_GCAs.txt') as bigfile:
-        for lineno, line in enumerate(bigfile):
-            if lineno % lines_per_file == 0:
-                if smallfile:
-                    smallfile.close()
-                small_filename = 'missing_GCAs_{}.txt'.format(lineno + lines_per_file)
-                smallfile = open(small_filename, "w")
-            smallfile.write(line)
-        if smallfile:
-            smallfile.close()
+    def splitTxt(bigFile, sNum):
+        lines_per_file = sNum
+        smallfile = None
+        with open(bigFile) as bigfile:
+            for lineno, line in enumerate(bigfile):
+                if lineno % lines_per_file == 0:
+                    if smallfile:
+                        smallfile.close()
+                    small_filename = os.path.splitext(bigFile)[0] + '_{}.txt'.format(lineno + lines_per_file)
+                    smallfile = open(small_filename, "w")
+                smallfile.write(line)
+            if smallfile:
+                smallfile.close()
+
+
+    splitTxt("missing_GCAs_1000.txt", 200)
+
 
     workingfoder = os.getcwd()
     GCA_list = os.listdir(workingfoder)
@@ -57,9 +62,17 @@ def main(args):
             NCBI_download= "ncbi-genome-download -F fasta -s genbank -A "+file+" --human-readable -o temp all"
             NCBI_args = shlex.split(NCBI_download)
             print("Start downloading:" + file)
-            p = subprocess.call(NCBI_args)
+            # p = subprocess.call(NCBI_args)
+            try:
+                proc = subprocess.Popen(NCBI_args,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                proc.wait()
+                (stdout, stderr) = proc.communicate()
+                os.remove(file)
+            except CalledProcessError as err:
+                print("Error ocurred: " + err.stderr)
+                continue
             
-
+            
 
 
 
