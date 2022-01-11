@@ -50,7 +50,7 @@ def main(args):
                 smallfile.close()
 
 
-    splitTxt("missing_GCAs_1000.txt", 200)
+    splitTxt("missing_GCAs.txt", 200)
 
 
     workingfoder = os.getcwd()
