@@ -14,7 +14,6 @@ def main(args):
     ftp.login()
     print("connected to remote server : ftp.ncbi.nlm.nih.gov")
     print()
-    
     def parse_cmdline_params(arg_list):
         """Parses commandline arguments.
         :param arg_list: Arguments to parse. Default is argv when called from the
@@ -31,10 +30,14 @@ def main(args):
         opts = options_parser.parse_args(args=arg_list)
         return opts
     
+    
     # Parse command line parameters.
     opts = parse_cmdline_params(args[1:])
 
-    
+
+    """
+    Functions for First Part:
+    """
     def get_matadata_ftp(folder=""):
         contents = ftp.nlst(folder)
         folders = []
@@ -42,16 +45,18 @@ def main(args):
             if item[-1].isdigit():
                 folders.append(item)
 
+        # item : PDG00000001.XXXX, last for digit indicated the latest information
         folders.sort(key=lambda x: int(x.split(".")[1]))   
 
         return folders[len(folders)-1]
 
 
-
+    # download tsv file through ftp
     def downloadFiles(path):
         try:
-        #     # change into "path directory"
-            ftp.cwd(path)       
+            # change into "path directory"
+            ftp.cwd(path)
+            # get local path    
             output_folder = os.getcwd()
             print ("Download to current directory: " + output_folder)
         except ftplib.error_perm:
@@ -80,11 +85,14 @@ def main(args):
         return final_path_file
 
 
- 
+
+
+
+
     """
     First part : find the metadata.tsv through NCBI ftp
     1. find the latest path of metadata.tsv
-    2. download tsv to local cwd
+    2. download tsv to current folder
     """
 
     # find the path: /pathogen/Results/species_name/PDG00000001.XXXX  /Metadata/
@@ -95,14 +103,13 @@ def main(args):
     latest_path = get_matadata_ftp(Ftp_source_files_path)
     filepath = os.path.join(latest_path,Meta_folder).replace("\\","/")
     print("Find the latest folder in NCBI site:"+ filepath)
-    source = filepath
 
-    # 2. download tsv to local cwd
-    final_path_file = downloadFiles(source)
-
+    # 2. download tsv to current folder
+    final_path_file = downloadFiles(filepath)
 
 
-    """ Second Part: In the cwd, get the tsv file and start running missing_GCA/SRR """
+
+    """ Second Part: In current folder, get the tsv file and start running missing_GCA/SRR """
     # Get list of SRR numbers from the metadata file.
     SRR_list = []
     # Decided not to use SortedList since we want them in chronological order.
@@ -151,7 +158,8 @@ def main(args):
         for filename in filenames:
             if os.path.isfile(filename):
                 base_filename = os.path.splitext(ntpath.basename(filename))[0]
-                base_filename = base_filename.split('_')[0]
+                # SRRxxxxxxx.fna, thus changed the split('_') to ('.')
+                base_filename = base_filename.split('.')[0]
                 if len(base_filename) > 0:
                     # If this filename was already seen, tell the user it's a duplicate.
                     if base_filename in previous_SRRs:
@@ -183,9 +191,7 @@ def main(args):
 
 
 
-        """
-        Functions for First Part:
-        """
+
 
 
 
@@ -193,7 +199,5 @@ def main(args):
 
 if __name__ == "__main__":
     #debug_args = [sys.argv[0], '--metadata', 'C:\\ieh_input_data\\NCBI_Pathogen_metadata\\Listeria_PDG000000001.2231.metadata.tsv', '--folders', 'C:\\ieh_input_data\\NCBI_Pathogen_metadata\\test_assembly_folder']
-    #main(debug_args)
-
     main(sys.argv)
     
