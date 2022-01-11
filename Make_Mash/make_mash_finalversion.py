@@ -2,6 +2,7 @@ import subprocess,os
 from subprocess import PIPE
 import shutil
 from datetime import date
+from typing import final
 import unzip_fasta
 import batchrename_zm
 import shlex
@@ -70,16 +71,37 @@ print ("end")
 
 
 # Mash paste all file
+
 os.chdir(workingfoder)
 msh_file = []
-for f in os.listdir(msh_Absdir): # iterate over all files in files_list
+for f in os.listdir(msh_Absdir):
     if f.endswith("msh"):
-        msh_file.append(os.path.join(msh_Absdir, f))
-        
-        
-args = ['mash','paste']
-args.append(msh_dir + '_All' )
-args += msh_file
-print("Starting mash paste")
-subprocess.call(args)
-print("done")
+        msh_file.append(os.path.join(msh_Absdir,f))
+
+
+cutoff = 1000 
+i = 0 
+newMash = msh_dir + "_"+ str(i)+ ".msh"
+while i  <= len(msh_file)// cutoff:
+
+    args = ['mash','paste']
+    
+    args.append(newMash)
+    if i > 0:
+        oldMash =  msh_dir + "_"+ str(i-1) + ".msh"
+        args.append(oldMash)
+        args += msh_file[cutoff * i : cutoff*(i+1)]
+        print("Starting mash paste: "+ str(i))
+        subprocess.call(args)
+        print("done")
+        i +=1
+        os.remove(oldMash)
+        newMash = msh_dir + "_"+ str(i) + ".msh"
+    else: 
+        args += msh_file[cutoff * i : cutoff*(i+1)]
+        print("Starting mash paste: "+ str(i))
+        subprocess.call(args)
+        print("done")
+        i +=1
+        # os.remove(oldMash)
+        newMash = msh_dir + "_"+ str(i) + ".msh"
