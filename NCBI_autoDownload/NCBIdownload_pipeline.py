@@ -54,11 +54,15 @@ def main(args):
 
 
     workingfoder = os.getcwd()
-    GCA_list = os.listdir(workingfoder)
+    # GCA_list = os.listdir(workingfoder)
     # iterate every small text file and run NCBI-GENOMIE-DOWNLOAD
-    for file in GCA_list: 
-        if file.startswith('missing_GCAs_'):
 
+
+    # Sort the mash files and download files in order
+    mshfiles = [f for f in os.listdir(workingfoder) if f.startswith('missing_GCAs_')]
+    sortedMsh = sorted(mshfiles, key=lambda x: int(x[13:]))
+
+    for file in sortedMsh:
             NCBI_download= "ncbi-genome-download -F fasta -s genbank -A "+file+" --human-readable -o temp all"
             NCBI_args = shlex.split(NCBI_download)
             print("Start downloading:" + file)
@@ -71,6 +75,21 @@ def main(args):
             except CalledProcessError as err:
                 print("Error ocurred: " + err.stderr)
                 continue
+    # for file in GCA_list: 
+    #     if file.startswith('missing_GCAs_'):
+            
+    #         NCBI_download= "ncbi-genome-download -F fasta -s genbank -A "+file+" --human-readable -o temp all"
+    #         NCBI_args = shlex.split(NCBI_download)
+    #         print("Start downloading:" + file)
+    #         # p = subprocess.call(NCBI_args)
+    #         try:
+    #             proc = subprocess.Popen(NCBI_args,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #             proc.wait()
+    #             (stdout, stderr) = proc.communicate()
+    #             os.remove(file)
+    #         except CalledProcessError as err:
+    #             print("Error ocurred: " + err.stderr)
+    #             continue
             
             
 
