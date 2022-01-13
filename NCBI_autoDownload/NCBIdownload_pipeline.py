@@ -60,7 +60,7 @@ def main(args):
 
     # Sort the mash files and download files in order
     mshfiles = [f for f in os.listdir(workingfoder) if f.startswith('missing_GCAs_')]
-    sortedMsh = sorted(mshfiles, key=lambda x: int(x[13:]))
+    sortedMsh = sorted(mshfiles, key=lambda x: int(os.path.splitext(x)[0][13:]))
 
     for file in sortedMsh:
             NCBI_download= "ncbi-genome-download -F fasta -s genbank -A "+file+" --human-readable -o temp all"
