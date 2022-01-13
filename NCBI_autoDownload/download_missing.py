@@ -96,6 +96,8 @@ def main(args):
     """
 
     # find the path: /pathogen/Results/species_name/PDG00000001.XXXX  /Metadata/
+    if  opts.species == "Ecoli":
+            opts.species = "Escherichia_coli_Shigella"
     Ftp_source_files_path = '/pathogen/Results/'+ opts.species
     Meta_folder = 'Metadata'
 
