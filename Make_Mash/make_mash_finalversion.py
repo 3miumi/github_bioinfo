@@ -2,7 +2,6 @@ import subprocess,os
 from subprocess import PIPE
 import shutil
 from datetime import date
-from typing import final
 import unzip_fasta
 import batchrename_zm
 import shlex
