@@ -4,42 +4,46 @@ import sys,os
 import shlex
 import subprocess
 from subprocess import CalledProcessError, PIPE
+from datetime import date
 def main(args):
     opts = parse_cmdline_params(args[1:])
 
     # downloadAccession = "/mnt/data2/FDA/assemblies/lmNew/sra_download.pl accessions.txt --ascp"
     # downloadAccession_args = shlex.split(downloadAccession)
     print("Starting download SRR fastq files")
-    if opts.ascp:
-        try:
 
-            p = subprocess.run(["perl", "/mnt/data2/FDA/assemblies/lmNew/sra_download.pl", "accessions.txt", "--ascp"])
-        except CalledProcessError as err:
-            print("Error ocurred: " + err.stderr)
-            sys.exit()
-    else:
-        try:
+    filesize = os.path.getsize(opts.file)
 
-            p = subprocess.run(["perl", "/mnt/data2/FDA/assemblies/lmNew/sra_download.pl", "accessions.txt"])
-            organzied = "for i in $(awk -F \"_ \" '{print $1}' <(ls *.gz) | sort | uniq); do mkdir $i; mv $i*.gz $i/.; done"
-            organzied_arg= shlex.split(organzied) 
-            subprocess.call(organzied_arg, shell = True)
+    if filesize != 0:
+        if opts.ascp:
+            try:
+
+                p = subprocess.run(["perl", "/mnt/data2/FDA/assemblies/lmNew/sra_download.pl", opts.file, "--ascp"])
+            except CalledProcessError as err:
+                print("Error ocurred: " + err.stderr)
+                sys.exit()
+        else:
+            try:
+
+                p = subprocess.run(["perl", "/mnt/data2/FDA/assemblies/lmNew/sra_download.pl", opts.file])
+                organzied = "for i in $(awk -F \"_ \" '{print $1}' <(ls *.gz) | sort | uniq); do mkdir $i; mv $i*.gz $i/.; done"
+                organzied_arg= shlex.split(organzied) 
+                subprocess.call(organzied_arg, shell = True)
+                
+            except CalledProcessError as err:
+                print("Error ocurred: " + err.stderr)
+                sys.exit()
+                # perl_arg = "perl /mnt/data2/FDA/assemblies/lmNew/sra_download.pl accessions.txt --ascp"
             
-        except CalledProcessError as err:
-            print("Error ocurred: " + err.stderr)
-            sys.exit()
-            # perl_arg = "perl /mnt/data2/FDA/assemblies/lmNew/sra_download.pl accessions.txt --ascp"
-        
-    
-    
-    
-
+    else:
+        print("No new accesions added.")
+        print("SNP analysis starting...")
     
     print(os.getcwd())
     path_parent = os.path.dirname(os.getcwd())
     os.chdir(path_parent)
     print(os.getcwd())
-    ref_dir = os.path.join(os.getcwd(),"reference")
+    ref_dir = os.path.join(os.getcwd(), "reference")
     files_list = os.listdir(ref_dir)
 
 
@@ -49,15 +53,17 @@ def main(args):
             ref_name = file
             break
     
-    Second_path = os.path.join(os.getcwd(), "Second_SNP")
-    if not os.path.isdir(Second_path):
-        os.mkdir(Second_path)
+
+    new_dir = "SNP" +  date.today().isoformat()
+    new_path = os.path.join(os.getcwd(), new_dir)
+    if not os.path.isdir(new_path):
+        os.mkdir(new_path)
     
     
     sample_path = os.path.join(os.getcwd(),"samples")
     ref_path = os.path.join(ref_dir, ref_name)
-    os.chdir(Second_path)
-    args =  "cfsan_snp_pipeline run -s " +" " + sample_path +" "+ ref_path
+    os.chdir(new_path)
+    args =  "cfsan_snp_pipeline run -s " + " " + sample_path +" "+ ref_path
     final_args= shlex.split(args) 
     subprocess.call(final_args)
 
@@ -86,9 +92,12 @@ def parse_cmdline_params(arg_list):
     #Create instance of ArgumentParser
     options_parser = ArgumentParser(formatter_class=
                                     ArgumentDefaultsHelpFormatter)
+    options_parser.add_argument('--file', dest='file', type=str, required=True,
+                                help="accessions, eg: accessions.txt")
 
     options_parser.add_argument('--ascp',
                                 help="if ascp commend need to be used(in case Aspera Connect ERROR)", action='store_true')
+    
     
     opts = options_parser.parse_args(args=arg_list)
     return opts
