@@ -15,52 +15,59 @@ def main(args):
         mashCommend = "/mnt/data2/FDA/assemblies/Mash_database_latest/ecoli/ecoli_msh_20220114.msh"
 
     # get the name of W number
-    w_number = opts.file.split(".")[0]
-    start_w_number = indexOflastdash(w_number)
-
-    accessions = "accessions_" + w_number[start_w_number+1:] + ".txt"
-
-
-    # create output_date.tab file for new sample
-    output = "output_" + w_number[start_w_number + 1:] + ".tab"
-    if not os.path.isfile(output) : 
-        f = open(output, "w")
-        mash_arg = shlex.split(mashCommend)
-        print("Mash distance started:")
-        subprocess.call(["mash", "dist", mashCommend, opts.file], stdout=f)
-        # create new topTen_date.txt for new sample
-
-    # topten = "topten" + date.today().isoformat() + ".txt"
-    # out = open(topten, "w")
-    topTen = []
-    sort_args = ['sort', '-gk3', output]
-    process_arg = subprocess.Popen(sort_args, stdout=subprocess.PIPE, shell=False)
-    # process_arg.wait()
-    process_arg2 = subprocess.Popen(['head'], stdin=process_arg.stdout, stdout=subprocess.PIPE, shell=False)
-    topTen = process_arg2.stdout.readlines()
-    process_arg2.communicate()
     
 
 
-
-
+  
+    topTen = []
     root = os.getcwd()
 
     orilist = [ item for item in os.listdir(root) if os.path.isdir(os.path.join(root, item))]
-    # orilist = open("accessions.txt", 'r').readlines()
+    accessionsList = []
     count =  0
-    with open(accessions, 'w') as outfile:
-        for line in topTen:
-            line = line.decode()
-            subline = line.split("\t")[0]
-            start = indexOflastdash(subline)
-            end = indexofclosing(subline)
-            subline = subline[start+1: end]
-            if subline not in orilist:
-                print(subline)
-                count += 1
-                outfile.write(subline)
-                outfile.write('\n')
+    files = opts.file.split(",")
+    for file in files:
+        w_number = file.split(".")[0]
+        start_w_number = indexOflastdash(w_number)
+
+        accessions = "accessions_" + w_number[start_w_number+1:] + ".txt"
+        accessionsList.append(accessions)
+        # create output_date.tab file for new sample
+        output = "output_" + w_number[start_w_number + 1:] + ".tab"
+        if not os.path.isfile(output) : 
+            f = open(output, "w")
+            mash_arg = shlex.split(mashCommend)
+            print(w_number[start_w_number+1:] + " Mash distance started:")
+            subprocess.call(["mash", "dist", mashCommend, file], stdout=f)
+            # create new topTen_date.txt for new sample
+
+        # topten = "topten" + date.today().isoformat() + ".txt"
+        # out = open(topten, "w")
+        
+        sort_args = ['sort', '-gk3', output]
+        process_arg = subprocess.Popen(sort_args, stdout=subprocess.PIPE, shell=False)
+        # process_arg.wait()
+        process_arg2 = subprocess.Popen(['head'], stdin=process_arg.stdout, stdout=subprocess.PIPE, shell=False)
+        topTen = process_arg2.stdout.readlines()
+        process_arg2.communicate()
+        
+
+        
+        # orilist = open("accessions.txt", 'r').readlines()
+      
+        with open(accessions, 'w') as outfile:
+            for line in topTen:
+                line = line.decode()
+                subline = line.split("\t")[0]
+                start = indexOflastdash(subline)
+                end = indexofclosing(subline)
+                subline = subline[start+1: end]
+                if subline not in orilist:
+                    print(subline)
+                    count += 1
+                    outfile.write(subline)
+                    outfile.write('\n')
+                    orilist.append(subline)
 
     print("Total of " + str(count) + " isolates were added in the list")
     
@@ -70,35 +77,20 @@ def main(args):
         sys.exit()
 
 
-    # downloadAccession = "/mnt/data2/FDA/assemblies/lmNew/sra_download.pl accessions.txt --ascp"
-    # downloadAccession_args = shlex.split(downloadAccession)
-
-    # if count == 0:
-    #     print("No new accessions added. Stop SNP")
-    #     sys.exit()
-
-    # print("Starting SNP analysis with " + str(count) + " new isolates.")
     if opts.ascp:
-        second_CFSAN.main(['','--file', accessions,"--ascp"])
+        second_CFSAN.main(['','--file', ','.join(accessionsList),"--ascp"])
     else:
-        second_CFSAN.main(['','--file', accessions])
-    # print("Starting download SRR fastq files")
-    # if opts.ascp:
-    #     subprocess.call(["perl", "/mnt/data2/FDA/assemblies/lmNew/sra_download.pl", "accessions2.txt", "--ascp"])
-    # else:
-    #     subprocess.call(["perl", "/mnt/data2/FDA/assemblies/lmNew/sra_download.pl", "accessions.txt"])
+        second_CFSAN.main(['','--file', ','.join(accessionsList)])
 
-    # print(os.getcwd())
-    # path_parent = os.path.dirname(os.getcwd())
-    # os.chdir(path_parent)
 
 def indexOflastdash(str):
-    index = 0
+    index = -1
     i = 0
     while i < len(str):
         if str[i] == '/':
             index = i
         i +=1
+    
     return index
 # find the index of end of pattern(any char rather than number and letter)
 
