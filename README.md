@@ -1,1 +1,2 @@
-# github_bioinfo
+# Work related - github_bioinfo
+SNP pipeline internal use
