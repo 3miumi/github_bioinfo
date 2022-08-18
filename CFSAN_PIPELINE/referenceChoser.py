@@ -57,7 +57,7 @@ def getContigs(SRR, folder, l):
     
     # "C:\\Users\ming\\Downloads\\chromedriver_win32\\chromedriver.exe"
     #    executable_path="/home/ming/dev/chromedriver",
-    driver = webdriver.Chrome(  executable_path="/home/ming/dev/chromedriver",chrome_options=options)
+    driver = webdriver.Chrome( executable_path="/home/ming/dev/chromedriver",chrome_options=options)
     driver.delete_all_cookies()
 
 
@@ -209,6 +209,7 @@ def getGCA(driver,tab):
     try:
         ftp = waitUntil(driver, By.XPATH, '//*[@id="ui-portlet_content-1"]/ul/li[3]/a')
         ftp.click()
+        time.sleep(1)
     except StaleElementReferenceException:
         return ""
 

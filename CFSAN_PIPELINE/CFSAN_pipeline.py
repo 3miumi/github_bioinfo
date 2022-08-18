@@ -72,7 +72,7 @@ def main(args):
     for srr in topSRR:
         srrArg += srr + " "
     os.chdir(dst)
-    referencePath= os.path.join(dst,"reference")
+    referencePath = os.path.join(dst,"reference")
     # get reference by SRR
     referencefile = referenceChoser.main(['','--SRR',srrArg, '--folder', referencePath])
 
